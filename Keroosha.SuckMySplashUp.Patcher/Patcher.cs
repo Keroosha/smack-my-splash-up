@@ -22,9 +22,12 @@ public class Patcher
         var png = new byte[] { 0x89, 0x50, 0x4e, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };   // PNG "\x89PNG\x0D\0xA\0x1A\0x0A"
 
         var buffer = new byte[8];
+        int read;
 
-        var fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-        var read = fs.Read(buffer, 0, 8);
+        using (var fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+        {
+            read = fs.Read(buffer, 0, 8);
+        }
 
         return read == 8 && buffer.SequenceEqual(png);
     }
