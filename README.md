@@ -38,4 +38,4 @@ If you interested to help me with this quest - contact me at [Dotnet.ru TALKS co
 
 I doesn't read PM messages from strangers at Telegram, so, ping me at chat first!
 
-Also - feel free to ask people at chat even if you don't know Russain (Most of the chat members know English), they can (probably) help before me
+Also - feel free to ask people at chat even if you don't know Russian (Most of the chat members know English), they can (probably) help before me
