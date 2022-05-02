@@ -43,7 +43,7 @@ public class Patcher
         foreach (ZipEntry entry in file)
         {
             // We don't care about directories and any file that not splash.png related
-            var skip = !(entry.IsDirectory || (entry.Name.Contains("splash") && entry.Name.EndsWith(".png")));
+            var skip = !(entry.Name.Contains("splash") && entry.Name.EndsWith(".png"));
             if (skip) continue;
             Console.WriteLine($"Patching: {entry.Name}");
             if (entry.Name.Contains("x2"))
