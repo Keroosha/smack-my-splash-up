@@ -30,6 +30,7 @@ You can specify only __--splash__ or __--splash2__ this is fine too
 
 - [ ] Currently, it is viable only for Unix builds (MacOS, Linux) windows patcher will be __soon™__
 - [ ] IDEA DOESN'T WORK for now, splash screen hidden somwhere else, I'll find it __soon™__
+- [ ] In MacOS - app.jar hidden in app image that can't be "penetrated" via ordinary cd into, manual app.jar extraction required
 
 ## Contribution
 
