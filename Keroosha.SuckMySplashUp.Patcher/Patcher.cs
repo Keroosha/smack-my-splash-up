@@ -1,4 +1,8 @@
 using ICSharpCode.SharpZipLib.Zip;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Processing;
 
 namespace Keroosha.SuckMySplashUp.Patcher;
 
@@ -17,21 +21,6 @@ public class Patcher
         SplashPath = splashPath;
     }
 
-    private bool FileIsPng(string path)
-    {
-        var png = new byte[] { 0x89, 0x50, 0x4e, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };   // PNG "\x89PNG\x0D\0xA\0x1A\0x0A"
-
-        var buffer = new byte[8];
-        int read;
-
-        using (var fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-        {
-            read = fs.Read(buffer, 0, 8);
-        }
-
-        return read == 8 && buffer.SequenceEqual(png);
-    }
-
     private void EnsurePatcherValid()
     {
         if (string.IsNullOrWhiteSpace(BinaryPath)) 
@@ -45,12 +34,12 @@ public class Patcher
         SplashPathx2 ??= SplashPath;
         if (!File.Exists(SplashPath) || !File.Exists(SplashPathx2))
             throw new ApplicationException("Splash screen files doesn't exist!");
-        
-        // TODO Re-pack if file is not PNG via Skia
-        if (!FileIsPng(SplashPath) || !FileIsPng(SplashPathx2)) 
-            throw new ApplicationException("Files should be a png!");
+
+        if (!ImageUtils.FileIsImage(SplashPath) || !ImageUtils.FileIsImage(SplashPathx2))
+            throw new ApplicationException("File is not an image!");
     }
 
+    // TODO: Mess, refactoring is needed (to discuss)
     private void PatchJarWithNewSplashes(ZipFile file)
     {
         foreach (ZipEntry entry in file)
@@ -58,13 +47,22 @@ public class Patcher
             // We don't care about directories and any file that not splash.png related
             var skip = !(entry.Name.Contains("splash") && entry.Name.EndsWith(".png"));
             if (skip) continue;
+
             Console.WriteLine($"Patching: {entry.Name}");
+
             if (entry.Name.Contains("x2"))
             {
-                file.Add(SplashPathx2, entry.Name);
+                using var splashImagex2 = Image.Load(SplashPathx2);
+                splashImagex2.Mutate(x => x
+                    .Resize(1280, 800));
+                ImageUtils.SaveImageToZipAs(splashImagex2, file, new PngEncoder(), entry.Name);
                 continue;
             }
-            file.Add(SplashPath, entry.Name);
+
+            using var splashImage = Image.Load(SplashPath);
+            splashImage.Mutate(x => x
+                .Resize(640,400));
+            ImageUtils.SaveImageToZipAs(splashImage, file, new PngEncoder(), entry.Name);
         }
     }
 
