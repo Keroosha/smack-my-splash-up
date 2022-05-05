@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.Zip;
 
 namespace Keroosha.SuckMySplashUp.Patcher;
@@ -7,6 +8,8 @@ public class Patcher
     public string? BinaryPath { get;  }
     public string? SplashPathx2 { get; set; }
     public string? SplashPath { get; set; }
+    
+    private readonly Regex _ideaRegex = new (@"idea_(.*_)?logo(@2x)?\.png");
 
     private string OldFilePath => $"{BinaryPath}.old";
     
@@ -43,7 +46,8 @@ public class Patcher
         foreach (ZipEntry entry in file)
         {
             // We don't care about directories and any file that not splash.png related
-            var skip = !(entry.Name.Contains("splash") && entry.Name.EndsWith(".png"));
+            var fileName = entry.Name;
+            var skip = !((fileName.Contains("splash") || _ideaRegex.IsMatch(fileName)) && fileName.EndsWith(".png"));
             if (skip) continue;
             Console.WriteLine($"Patching: {entry.Name}");
             if (entry.Name.Contains("x2"))
