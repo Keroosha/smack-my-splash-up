@@ -35,9 +35,11 @@ public class Patcher
         if (!File.Exists(SplashPath) || !File.Exists(SplashPathx2))
             throw new ApplicationException("Splash screen files doesn't exist!");
 
-        if (!ImageUtils.FileIsImage(SplashPath) || !ImageUtils.FileIsImage(SplashPathx2))
+        if (!FileIsImage(SplashPath) || !FileIsImage(SplashPathx2))
             throw new ApplicationException("File is not an image!");
     }
+
+    internal static bool FileIsImage(string path) => Image.Identify(path) != null;
 
     // TODO: Mess, refactoring is needed (to discuss)
     private void PatchJarWithNewSplashes(ZipFile file)
@@ -55,14 +57,14 @@ public class Patcher
                 using var splashImagex2 = Image.Load(SplashPathx2);
                 splashImagex2.Mutate(x => x
                     .Resize(1280, 800));
-                ImageUtils.SaveImageToZipAs(splashImagex2, file, new PngEncoder(), entry.Name);
+                splashImagex2.SaveAsPngToZip(file, entry.Name);
                 continue;
             }
 
             using var splashImage = Image.Load(SplashPath);
             splashImage.Mutate(x => x
                 .Resize(640,400));
-            ImageUtils.SaveImageToZipAs(splashImage, file, new PngEncoder(), entry.Name);
+            splashImage.SaveAsPngToZip(file, entry.Name);
         }
     }
 
