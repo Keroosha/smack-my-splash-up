@@ -1,5 +1,9 @@
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.Zip;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Processing;
 
 namespace Keroosha.SuckMySplashUp.Patcher;
 
@@ -20,8 +24,6 @@ public class Patcher
         SplashPath = splashPath;
     }
 
-    private bool FileIsPng(string path) => path.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
-
     private void EnsurePatcherValid()
     {
         if (string.IsNullOrWhiteSpace(BinaryPath)) 
@@ -35,12 +37,14 @@ public class Patcher
         SplashPathx2 ??= SplashPath;
         if (!File.Exists(SplashPath) || !File.Exists(SplashPathx2))
             throw new ApplicationException("Splash screen files doesn't exist!");
-        
-        // TODO Re-pack if file is not PNG via Skia
-        if (!FileIsPng(SplashPath) || !FileIsPng(SplashPathx2)) 
-            throw new ApplicationException("Files should be a png!");
+
+        if (!FileIsImage(SplashPath) || !FileIsImage(SplashPathx2))
+            throw new ApplicationException("File is not an image!");
     }
 
+    internal static bool FileIsImage(string path) => Image.Identify(path) != null;
+
+    // TODO: Mess, refactoring is needed (to discuss)
     private void PatchJarWithNewSplashes(ZipFile file)
     {
         foreach (ZipEntry entry in file)
@@ -49,13 +53,22 @@ public class Patcher
             var fileName = entry.Name;
             var skip = !((fileName.Contains("splash") || _ideaRegex.IsMatch(fileName)) && fileName.EndsWith(".png"));
             if (skip) continue;
+
             Console.WriteLine($"Patching: {entry.Name}");
+
             if (entry.Name.Contains("x2"))
             {
-                file.Add(SplashPathx2, entry.Name);
+                using var splashImagex2 = Image.Load(SplashPathx2);
+                splashImagex2.Mutate(x => x
+                    .Resize(1280, 800));
+                splashImagex2.SaveAsPngToZip(file, entry.Name);
                 continue;
             }
-            file.Add(SplashPath, entry.Name);
+
+            using var splashImage = Image.Load(SplashPath);
+            splashImage.Mutate(x => x
+                .Resize(640,400));
+            splashImage.SaveAsPngToZip(file, entry.Name);
         }
     }
 
